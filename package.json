@@ -1,0 +1,41 @@
+{
+  "name": "chiefy.github.io",
+  "version": "1.0.0",
+  "description": "javascript, devops, golang and other techno-babble.",
+  "twitter": "tehsuck",
+  "github": "chiefy",
+  "gravatar": "adca7d78e74745d1488f59bd3830418e",
+  "title": "throw new Error('chief')",
+  "disqus_shortname": "",
+  "prompt": "hi, i'm chief",
+  "siteurl": "https://chiefy.github.io",
+  "main": "index.js",
+  "scripts": {
+    "build": "node index.js",
+    "dev": "NODE_ENV=dev DEBUG=* node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//chiefy/chiefy.github.io"
+  },
+  "author": "Christopher 'Chief' Najewicz <chief@beefdisciple.com>",
+  "license": "MIT",
+  "dependencies": {
+    "metalsmith": "^2.1.0",
+    "metalsmith-assets": "^0.1.0",
+    "metalsmith-beautify": "0.0.7",
+    "metalsmith-browser-sync": "^1.1.0",
+    "metalsmith-collections": "^0.7.0",
+    "metalsmith-define": "^1.0.0",
+    "metalsmith-drafts": "0.0.1",
+    "metalsmith-excerpts": "^1.1.0",
+    "metalsmith-layouts": "^1.4.2",
+    "metalsmith-markdown": "^0.2.1",
+    "metalsmith-permalinks": "^0.4.1",
+    "metalsmith-sass": "^1.3.0",
+    "metalsmith-slug": "0.0.5",
+    "metalsmith-tags": "^1.1.0",
+    "metalsmith-templates": "^0.7.0",
+    "swig": "^1.4.2"
+  }
+}
