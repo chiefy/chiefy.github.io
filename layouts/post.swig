@@ -24,12 +24,10 @@ $(document).ready(function () {
 	$('.rrssb-buttons').rrssb({
 		title: '{{ title }}',
 		url: '{{ baseurl }}/{{ path }}',
-		description: '{{ title }}',
+		description: '{{ title }} via @tehsuck',
 		emailBody: '\n{{ title }}\n{{ baseurl }}/{{ path }}\n\n{{ excerpt|striptags }}'
 	});
 });
 </script>
 {% include "includes/back.swig" %}
 {% endblock %}
-
-
