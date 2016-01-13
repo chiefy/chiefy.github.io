@@ -8,7 +8,7 @@
   "title": "throw new Error('chief')",
   "disqus_shortname": "",
   "prompt": "hi, i'm chief",
-  "siteurl": "https://chiefy.github.io",
+  "baseurl": "https://chiefy.github.io",
   "main": "index.js",
   "scripts": {
     "build": "node index.js",
