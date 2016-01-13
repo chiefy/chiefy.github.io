@@ -140,6 +140,47 @@ span[data-note].open {
 	-webkit-animation-name: bounce
 }
 
+.logo a.social {
+	width: 70px;
+	height: 70px;
+	line-height: 70px;
+	background: #ddd
+}
+
+.logo a.social#twitter:hover,
+.logo a.social#twitter:focus {
+	background: #3dcae2
+}
+
+.logo a.social#instagram:hover,
+.logo a.social#instagram:focus {
+	background: #af9007
+}
+
+.logo a.social#linkedin:hover,
+.logo a.social#linkedin:focus {
+	background: #0160a8
+}
+
+.logo a.social#github:hover,
+.logo a.social#github:focus {
+	background: #707070
+}
+
+.logo a.social:hover+.logo-prompt,
+.logo a.social:focus+.logo-prompt {
+	display: inline-block !important
+}
+
+.logo a.social img {
+	margin-top: 5px;
+	-webkit-border-radius: 50%;
+	-moz-border-radius: 50%;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px
+}
+
 .logo a {
 	background: #ddd url("gravatar_wrapper.png");
 	color: #000;
@@ -193,7 +234,7 @@ span[data-note].open {
 	font-size: 0.8235em;
 	text-align: center;
 	line-height: 1.2;
-	top: 50%;
+	top: 25%;
 	margin-top: -10px
 }
 

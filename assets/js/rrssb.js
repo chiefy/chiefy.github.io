@@ -47,7 +47,7 @@
 			if (settings.hasOwnProperty(key) && settings[key] !== undefined) {
 				settings[key] = encodeString(settings[key]);
 			}
-		};
+		}
 		if (settings.url !== undefined) {
 			$(this).find('.rrssb-facebook a').attr('href', 'https://www.facebook.com/sharer/sharer.php?u=' + settings.url);
 			$(this).find('.rrssb-tumblr a').attr('href', 'http://tumblr.com/share/link?url=' + settings.url + (settings.title !== undefined ? '&name=' + settings.title :
@@ -64,7 +64,6 @@
 				'%20' + settings.url);
 			$(this).find('.rrssb-pinterest a').attr('href', 'http://pinterest.com/pin/create/button/?url=' + settings.url + ((settings.image !== undefined) ?
 				'&amp;media=' + settings.image : '') + (settings.description !== undefined ? '&description=' + settings.description : ''));
-			$(this).find('.rrssb-pocket a').attr('href', 'https://getpocket.com/save?url=' + settings.url);
 		}
 		if (settings.emailAddress !== undefined || settings.emailSubject) {
 			$(this).find('.rrssb-email a').attr('href', 'mailto:' + (settings.emailAddress ? settings.emailAddress : '') + '?' + (settings.emailSubject !== undefined ?
