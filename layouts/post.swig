@@ -25,7 +25,7 @@ $(document).ready(function () {
 		title: '{{ title }}',
 		url: '{{ baseurl }}/{{ path }}',
 		description: '{{ title }}',
-		emailBody: 'Check out this link: <a href="{{ baseurl }}/{{ path }}">{{ title }}</a>\n\n{{ excerpt|striptags }}'
+		emailBody: '\n{{ title }}\n{{ baseurl }}/{{ path }}\n\n{{ excerpt|striptags }}'
 	});
 });
 </script>

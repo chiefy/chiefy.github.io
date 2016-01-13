@@ -3,57 +3,59 @@ var ms = new Metalsmith(__dirname);
 var fs = require('fs');
 
 /*eslint-disable*/
-var markdown    = require('metalsmith-markdown');
-var layouts     = require('metalsmith-layouts');
-var collections = require('metalsmith-collections');
-var assets      = require('metalsmith-assets');
-var sass        = require('metalsmith-sass');
-var permalinks  = require('metalsmith-permalinks');
-var slug        = require('metalsmith-slug');
-var define      = require('metalsmith-define');
-var excerpts    = require('metalsmith-excerpts');
-var beautify    = require('metalsmith-beautify');
+var _layouts     = require('metalsmith-layouts');
+var _collections = require('metalsmith-collections');
+var _assets      = require('metalsmith-assets');
+var _sass        = require('metalsmith-sass');
+var _permalinks  = require('metalsmith-permalinks');
+var _slug        = require('metalsmith-slug');
+var _define      = require('metalsmith-define');
+
+var excerpts     = require('metalsmith-excerpts')();
+var beautify     = require('metalsmith-beautify')();
+var uglify       = require('metalsmith-uglify')();
+var markdown     = require('metalsmith-markdown')();
 /*eslint-enable*/
 
 var pkg = JSON.parse(fs.readFileSync('package.json'));
-
-ms
-	.use(define({
+var define = _define({
 		pkg: pkg,
 		env: process.env.NODE_ENV,
-		baseurl: process.env.NODE_ENV === 'dev' ? 'http://localhost:8080' : pkg.baseurl
-	}))
-	.use(collections({
+		baseurl: (process.env.NODE_ENV === 'dev')	?
+			'http://localhost:8080' : pkg.baseurl
+});
+var layouts = _layouts({engine: 'swig'});
+var collections = _collections({
 		posts: {
 			pattern: 'posts/*.md',
 			sortBy: 'date',
 			reverse: true
 		}
-	}))
-	.use(sass({
-		outputDir: './assets'
-	}))
-	.use(assets({
-		destination: './assets'
-	}))
-	.use(slug({
+});
+var assets = _assets({destination: './assets'});
+var sass = _sass({outputDir: './assets'});
+var slug = _slug({
 		patterns: [
 			'posts/*.md'
 		]
-	}))
-	.use(markdown())
-	.use(permalinks({
+});
+var permalinks = _permalinks({
 		pattern: ':title',
 		relative: false
-	}))
-	.use(excerpts())
-	.use(layouts({
-		engine: 'swig'
-	}))
-	.use(beautify());
-
+});
 
 ms
+	.use(define)
+	.use(collections)
+	.use(sass)
+	.use(assets)
+	.use(slug)
+	.use(markdown)
+	.use(permalinks)
+	.use(excerpts)
+	.use(layouts)
+	.use(beautify)
+	.use(uglify)
 	.build(function onBuild(err, files) {
 		if (err) {
 			throw err;

@@ -10,6 +10,7 @@
 <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
 
 <link rel="stylesheet" href="/assets/core.css">
+<link rel="stylesheet" href="/assets/social-icons.css">
 <link rel="stylesheet" href="/assets/rrssb.css">
 <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/zenburn.min.css">
 <link rel="alternate" type="application/atom+xml" title="{{ pkg.title }}" href="{{ baseurl }}/feed.xml" />
