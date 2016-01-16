@@ -1,7 +1,7 @@
 ---
 layout: post.swig
 title: Decoupling the Node Runtime From Your App with docker-compose
-date: 2015-01-16 11:59:27
+date: 2016-01-16 11:59:27
 gist: chiefy/c914b3d8f94ce08a01b2:.dockerignore chiefy/c914b3d8f94ce08a01b2:Dockerfile chiefy/c914b3d8f94ce08a01b2:docker-compose.yml chiefy/c914b3d8f94ce08a01b2:index.js chiefy/c914b3d8f94ce08a01b2:docker-compose-patched.yml
 tags:
   - docker,
