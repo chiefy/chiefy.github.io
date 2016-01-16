@@ -13,4 +13,4 @@ clean:
 
 push: clean build
 	@git checkout master
-	@cp -R /build/* . && rm -rf build
+	@cp -R ./build/* . && rm -rf build
