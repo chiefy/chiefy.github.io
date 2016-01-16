@@ -12,7 +12,5 @@ clean:
 	@rm -rf build
 
 push: build
-	@cp -R build /tmp
-	@$(MAKE) clean
-	@git checkout gh-pages
-	@cp -R /tmp/build/* .
+	@git checkout master
+	@cp -R /build/* . && rm -rf build
