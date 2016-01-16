@@ -10,6 +10,7 @@
 	</div>
 	<div class="divider"></div>
 	{{ contents | safe }}
+	<div class="divider"></div>
 	{% include "includes/sharing.swig" %}
 	{% if env !== 'dev' %}
 		{% include "includes/disqus.swig" with { url: pkg.baseurl + path, id: slug } only	 %}
