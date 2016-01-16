@@ -11,6 +11,6 @@ build: node_modules
 clean:
 	@rm -rf build
 
-push: build
+push: clean build
 	@git checkout master
 	@cp -R /build/* . && rm -rf build
