@@ -1,0 +1,11 @@
+.gist .blob-code.blob-code-inner {
+	background: #dddddd;
+}
+
+.gist table {
+	width: inherit;
+}
+
+article .gist .blob-code-inner {
+	white-space: normal;
+}

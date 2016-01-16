@@ -17,8 +17,9 @@
 	<link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
 
 	<link rel="stylesheet" href="/assets/core.css">
-	<link rel="stylesheet" href="/assets/social-icons.css">
+	<link rel="stylesheet" href="/assets/gists.css">
 	<link rel="stylesheet" href="/assets/rrssb.css">
+
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/zenburn.min.css">
 	<link rel="alternate" type="application/atom+xml" title="throw new Error(&#39;chief&#39;)" href="https://chiefy.github.io/feed.xml" />
 
@@ -269,6 +270,7 @@ exports.meatAdd = {
 			<p>Up next, we&#39;ll create an <a href="http://emberjs.com">EmberJS</a> based UI for our meat app.</p>
 			<p>I&#39;ve included the source for this project on <a href="https://github.com/chiefy/sqlite-sequelize-actionhero-demo">GitHub</a>.</p>
 
+			<div class="divider"></div>
 			<ul class="rrssb-buttons">
 				<li class="rrssb-hackernews">
 					<a href="">
@@ -357,7 +359,7 @@ exports.meatAdd = {
 				$('.rrssb-buttons').rrssb({
 					title: 'Using SQLite and Sequelize with ActionHero',
 					url: 'https://chiefy.github.io/using-sqlite-and-sequelize-with-actionhero',
-					description: 'Using SQLite and Sequelize with ActionHero',
+					description: 'Using SQLite and Sequelize with ActionHero via @tehsuck',
 					emailBody: '\nUsing SQLite and Sequelize with ActionHero\nhttps://chiefy.github.io/using-sqlite-and-sequelize-with-actionhero\n\nThis past weekend I was checking out ActionHero, a pretty nice API framework written in Node.js which claims to be: &quot;Reusable, Scalable, and Quick!&quot; I was setting up a quick example and I didn&#39;t want to have to connect to a MySQL or Postgres DB. ActionHero comes with fakeredis, an in-memory pseudo-redis store, which is great for experimenting but I wanted to use a local disk store. A few google searches didn&#39;t turn up too much on how to use SQLite with ActionHero, so here we go.'
 				});
 			});
