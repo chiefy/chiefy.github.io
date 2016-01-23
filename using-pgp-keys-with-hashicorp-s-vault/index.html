@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>throw new Error(&#39;chief&#39;) - Using PGP Keys With Hashicorp&#39;s Vault</title>
+	<meta name="twitter:card" content="javascript, devops, golang and other techno-babble." />
+	<meta name="twitter:site" content="@tehsuck" />
+	<meta name="twitter:title" content="throw new Error(&#39;chief&#39;) - Using PGP Keys With Hashicorp&#39;s Vault" />
+	<meta name="twitter:description" content="Unless you&#39;ve been living in a DevOps cave, you have probably heard of Hashicorp&#39;s Vault. By their own definition:">
+	<meta name="description" content="Unless you&#39;ve been living in a DevOps cave, you have probably heard of Hashicorp&#39;s Vault. By their own definition:">
+	<link rel="canonical" href="https://chiefy.github.io/using-pgp-keys-with-hashicorp-s-vault">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Source+Code+Pro' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="/assets/core.css">
+	<link rel="stylesheet" href="/assets/gists.css">
+	<link rel="stylesheet" href="/assets/rrssb.css">
+
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/zenburn.min.css">
+	<link rel="alternate" type="application/atom+xml" title="throw new Error(&#39;chief&#39;)" href="https://chiefy.github.io/feed.xml" />
+
+</head>
+
+<body>
+	<aside class="logo">
+		<a class="social" id="twitter" href="https://twitter.com/tehsuck"><img src="/assets/img/twitter-square-black.png"></a>
+		<a class="social" id="instagram" href="https://instagram.com/tehsuck"><img src="/assets/img/instagram-square-black.png"></a>
+		<a href="https://chiefy.github.io">
+			<img src="http://www.gravatar.com/avatar/adca7d78e74745d1488f59bd3830418e.png?s=80" class="gravatar">
+		</a>
+		<span class="logo-prompt">hi, i&#39;m chief</span>
+		<a class="social" id="github" href="https://github.com/chiefy"><img src="/assets/img/github-square-black.png"></a>
+		<a class="social" id="linkedin" href="https://www.linkedin.com/in/chief"><img src="/assets/img/linkedin-square-black.png"></a>
+	</aside>
+
+	<main>
+
+		<article>
+			<div class="center">
+				<h1>Using PGP Keys With Hashicorp&#39;s Vault</h1>
+				<time>January 22nd, 2016</time>
+			</div>
+			<div class="divider"></div>
+			<p>Unless you&#39;ve been living in a DevOps cave, you have probably heard of <a href="https://hashicorp.com">Hashicorp</a>&#39;s <a href="https://vaultproject.io">Vault</a>.
+				By their own definition:</p>
+			<blockquote>
+				<p>Vault secures, stores, and tightly controls access to tokens, passwords, certificates, API keys, and other secrets in modern computing. Vault handles leasing,
+					key revocation, key rolling, and auditing. Vault presents a unified API to access multiple backends: HSMs, AWS IAM, SQL databases, raw key/value, and more.</p>
+			</blockquote>
+			<p>An under-the-radar feature that was recently introduced includes the ability to use <a href="https://en.wikipedia.org/wiki/Pretty_Good_Privacy">PGP</a> keys to
+				initialize a vault. I am somewhat of a PGP n00b, so I wanted to share how I got this setup working.</p>
+			<p>
+				<blockquote class="twitter-tweet" data-conversation="none" data-align="center" data-lang="en">
+					<p lang="en" dir="ltr"><a href="https://twitter.com/JamieDobson">@JamieDobson</a> Haha, we are using PGP to distribute our internal Vault unseal keys. We are pushing towards zero
+						trust at <a href="https://twitter.com/hashicorp">@hashicorp</a>.</p>&mdash; Armon Dadgar (@armon) <a href="https://twitter.com/armon/status/673279223587442688">December 5, 2015</a></blockquote>
+			</p>
+			<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+			<p>In order to get started, you will need some PGP keypairs. For the remainder of this post I will be using <a href="https://gnupg.org/">GPG</a> which is a FOSS
+				implementation of the PGP standard. If you are on Windows, there is also <a href="https://www.gpg4win.org/">gpg4win</a>. </p>
+			<h2 id="installing-gpg-tools">Installing GPG Tools</h2>
+			<p>There are a few options to install tooling: you can install from source, <a href="https://gnupg.org/download/index.html">download a pre-built binary</a>, or use
+				a package managera like <code>apt</code> or <code>brew</code>. I am running OSX, so we&#39;ll use homebrew:</p>
+			<pre><code class="lang-bash">❯ brew install gpg2
+</code></pre>
+			<p>Let&#39;s test our installation:</p>
+			<pre><code class="lang-bash">❯ gpg --version
+gpg (GnuPG/MacGPG2) 2.0.28
+libgcrypt 1.6.3
+Copyright (C) 2015 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Home: ~/.gnupg
+Supported algorithms:
+Pubkey: RSA, RSA, RSA, ELG, DSA
+Cipher: IDEA, 3DES, CAST5, BLOWFISH, AES, AES192, AES256, TWOFISH,
+        CAMELLIA128, CAMELLIA192, CAMELLIA256
+Hash: MD5, SHA1, RIPEMD160, SHA256, SHA384, SHA512, SHA224
+Compression: Uncompressed, ZIP, ZLIB, BZIP2
+</code></pre>
+			<h2 id="create-a-pgp-keypair">Create a PGP Keypair</h2>
+			<pre><code class="lang-bash">❯ gpg --gen-key
+gpg (GnuPG/MacGPG2) 2.0.28; Copyright (C) 2015 Free Software Foundation, Inc.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Please select what kind of key you want:
+   (1) RSA and RSA (default)
+   (2) DSA and Elgamal
+   (3) DSA (sign only)
+   (4) RSA (sign only)
+Your selection?
+</code></pre>
+			<p>Hit <code>enter</code> to use the default.</p>
+			<pre><code class="lang-bash">RSA keys may be between 1024 and 4096 bits long.
+What keysize do you want? (2048)
+</code></pre>
+			<p>Use <code>4096</code></p>
+			<pre><code>Requested keysize is 4096 bits
+Please specify how long the key should be valid.
+         0 = key does not expire
+      &lt;n&gt;  = key expires in n days
+      &lt;n&gt;w = key expires in n weeks
+      &lt;n&gt;m = key expires in n months
+      &lt;n&gt;y = key expires in n years
+</code></pre>
+			<p>We&#39;ll use a 2 year expiration.</p>
+			<pre><code>GnuPG needs to construct a user ID to identify your key.
+
+Real name: Hans Gruber
+Email address: hans@nakatomi.com
+Comment:
+You selected this USER-ID:
+    &quot;Hans Gruber &lt;hans@nakatomi.com&gt;&quot;
+
+Change (N)ame, (C)omment, (E)mail or (O)kay/(Q)uit?
+</code></pre>
+			<p>Much respect to the recently deceased Alan Rickman, we&#39;ll use a fake name and e-mail here for the sake of this demo. Hit <code>O</code> to accept. Then enter
+				a passphrase to secure the key.</p>
+			<pre><code>gpg: checking the trustdb
+gpg: 3 marginal(s) needed, 1 complete(s) needed, PGP trust model
+gpg: depth: 0  valid:   3  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 3u
+gpg: next trustdb check due at 2018-01-22
+pub   4096R/B4C0CE0E 2016-01-23 [expires: 2018-01-22]
+      Key fingerprint = D080 6B4A 10F8 EFA1 F200  6805 6BBD F42D B4C0 CE0E
+uid       [ultimate] Hans Gruber &lt;hans@nakatomi.com&gt;
+sub   4096R/B842B3EB 2016-01-23 [expires: 2018-01-22]
+</code></pre>
+			<p>Let&#39;s list our keys:</p>
+			<pre><code>❯ gpg --list-keys
+/Users/chief/.gnupg/pubring.gpg
+---------------------------------------
+pub   4096R/EC8C9492 2014-04-26
+uid       [ unknown] Keybase.io Merkle Signing (v1) &lt;merkle@keybase.io&gt;
+sub   4096R/8080955B 2014-04-26
+sub   4096R/49DA99D5 2014-04-26 [expires: 2024-04-23]
+
+pub   2048D/00D026C4 2010-08-19 [expires: 2018-08-19]
+uid       [ultimate] GPGTools Team &lt;team@gpgtools.org&gt;
+uid       [ultimate] GPGMail Project Team (Official OpenPGP Key) &lt;gpgmail-devel@lists.gpgmail.org&gt;
+uid       [ultimate] GPGTools Project Team (Official OpenPGP Key) &lt;gpgtools-org@lists.gpgtools.org&gt;
+uid       [ultimate] [jpeg image of size 5871]
+sub   2048g/DBCBE671 2010-08-19 [expires: 2018-08-19]
+sub   4096R/0D9E43F5 2014-04-08 [expires: 2024-01-02]
+
+pub   4096R/621C58AF 2015-06-25 [expires: 2025-06-22]
+uid       [ unknown] keybase.io/chief &lt;chief@keybase.io&gt;
+sub   4096R/F4BFDCBF 2015-06-25 [expires: 2025-06-22]
+
+pub   4096R/1AEAD978 2016-01-18 [expires: 2020-01-18]
+uid       [ultimate] Christopher Najewicz &lt;chief@beefdisciple.com&gt;
+uid       [ultimate] [jpeg image of size 6611]
+sub   4096R/D4CDB72B 2016-01-18 [expires: 2020-01-18]
+
+pub   4096R/B4C0CE0E 2016-01-23 [expires: 2018-01-22]
+uid       [ultimate] Hans Gruber &lt;hans@nakatomi.com&gt;
+sub   4096R/B842B3EB 2016-01-23 [expires: 2018-01-22]
+</code></pre>
+			<p>We now have a PGP keypair for <code>Hans Gruber</code>. If you want to read some more on GPG, <a href="https://gnupg.org/gph/en/manual.html">read the docs!</a>.</p>
+			<h2 id="vault-client-setup">Vault Client Setup</h2>
+			<p>For the sake of simplicity, we&#39;ll be using the Vault CLI client to interface with the Vault server. Vault also offers an <a href="https://www.vaultproject.io/docs/http/index.html">extensive HTTP API</a>.
+				Again, I am using <code>brew</code> here, but you may use whatever package manager you want, or just <a href="https://www.vaultproject.io/downloads.html">download Vault binaries</a>				at the official site.</p>
+			<pre><code class="lang-bash">❯ brew install vault
+</code></pre>
+			<h2 id="vault-server-setup">Vault Server Setup</h2>
+			<p>For the sake of this article, we&#39;ll be using a <a href="https://quay.io/repository/chiefy/alpine-vault">docker image I&#39;ve created</a> to run the Vault
+				server.</p>
+			<pre><code class="lang-bash">❯ docker pull quay.io/chiefy/alpine-vault:0.4.1
+</code></pre>
+			<p>First, let&#39;s generate a Vault configuration for the backend server. A quick note: the below config <strong>is insecure</strong> because it uses the <code>inmem</code>				storage backend and disables the use of <code>tls</code>. <strong>Do not even think about using this setup for anything sensitive</strong>, this is for demo
+				purposes only. If you&#39;re interested in getting a secure setup for Vault, please <a href="https://www.vaultproject.io/docs/index.html">RTFM</a>! Without further
+				ado, here is our <code>vault.hcl</code>:</p>
+			<pre><code>backend &quot;inmem&quot; {}
+
+listener &quot;tcp&quot; {
+  address = &quot;0.0.0.0:8200&quot;
+  tls_disable = 1
+}
+</code></pre>
+			<p>To run the server:</p>
+			<pre><code class="lang-bash">❯ docker run -d \
+--name vault \
+--cap-add=IPC_LOCK \
+-v $(pwd)/vault.hcl:/etc/vault.hcl \
+-p &quot;8200:8200&quot; \
+quay.io/chiefy/alpine-vault:0.4.1
+</code></pre>
+			<p>Make sure the server came up ok:</p>
+			<pre><code class="lang-bash">docker logs vault
+==&gt; Vault server configuration:
+
+         Log Level: info
+             Mlock: supported: true, enabled: true
+           Backend: inmem
+        Listener 1: tcp (addr: &quot;0.0.0.0:8200&quot;, tls: &quot;disabled&quot;)
+           Version: Vault v0.4.1
+
+==&gt; Vault server started! Log data will stream in below:
+</code></pre>
+			<p>We can check the vault&#39;s status:</p>
+			<pre><code class="lang-bash">❯ curl -XGET http://docker.local:8200/v1/sys/init
+{&quot;initialized&quot;:false}
+</code></pre>
+			<h2 id="setting-vault_addr-">Setting <code>VAULT_ADDR</code></h2>
+			<p>In order to use the Vault CLI with our docker container, we have to point it at the correct IP address. If you&#39;re using <code>docker-machine</code>, you can
+				get the IP by running:</p>
+			<pre><code class="lang-bash">❯ docker-machine ip &lt;docker-host-name&gt;
+</code></pre>
+			<p>On my local setup, I use <code>docker-host</code> as the host ID. To set <code>VAULT_ADDR</code> we can shorten it to:</p>
+			<pre><code class="lang-bash">❯ export VAULT_ADDR=http://$(docker-machine ip docker-host):8200
+</code></pre>
+			<p>If you are running Linux, the docker daemon usually listens on <code>localhost</code>, so <code>export VAULT_ADDR=http://localhost:8200</code></p>
+			<p>To make sure everything is setup, let&#39;s again try to get the vault&#39;s status:</p>
+			<pre><code class="lang-bash">❯ vault status
+Error checking seal status: Error making API request.
+
+URL: GET http://192.168.99.100:8200/v1/sys/seal-status
+Code: 400. Errors:
+
+* server is not yet initialized
+</code></pre>
+			<p>This is good! It means that we connected to Vault&#39;s API and it received a <code>400</code> because our vault is not yet initialized.</p>
+			<h2 id="exporting-the-public-key">Exporting The Public Key</h2>
+			<p>In order to initialize and unseal the vault, we will need to export our public key from the PGP keypair we just created. I had a bit of trouble during this step.
+				Hat-tip to <a href="https://github.com/eedgar">@eedgar</a> on GitHub who posted some tips in <a href="https://github.com/hashicorp/vault/issues/682#issuecomment-146574727">this issue&#39;s thread</a>.
+				You will need your key&#39;s ID to export it, note the number after <code>4096R/</code> in the <code>gpg</code> output above when we generated our key. Our key
+				ID is <code>B4C0CE0E</code>. Vault will take either a binary keyfile or a base64 encoded keyfile. </p>
+			<pre><code class="lang-bash">❯ gpg --export B4C0CE0E | base64 &gt; hans.key
+</code></pre>
+			<p>I&#39;ll also export my personal key:</p>
+			<pre><code class="lang-bash">❯ gpg --export 1AEAD978 | base64 &gt; chief.key
+</code></pre>
+			<h2 id="initializing-our-vault">Initializing Our Vault</h2>
+			<p>Our first step is to initialize the vault. To do this, you must provide some parameters:</p>
+			<pre><code class="lang-bash">Init Options:
+
+  -key-shares=5           The number of key shares to split the master key
+                          into.
+
+  -key-threshold=3        The number of key shares required to reconstruct
+                          the master key.
+
+  -pgp-keys               If provided, must be a comma-separated list of
+                          files on disk containing binary- or base64-format
+                          public PGP keys. The number of files must match
+                          &#39;key-shares&#39;. The output unseal keys will encrypted
+                          and hex-encoded, in order, with the given public keys.
+                          If you want to use them with the &#39;vault unseal&#39;
+                          command, you will need to hex decode and decrypt;
+                          this will be the plaintext unseal key.
+</code></pre>
+			<p>For this example, we are going to use two PHP keys to initialize. Hans and I will be the keybearers. This means that our <code>-key-shares</code> should be set
+				to 2 and we&#39;ll set <code>-key-threshold</code> also to 2.</p>
+			<p>We&#39;ll also need to reference the exported, base64 encoded public keys we created in the previous step.</p>
+			<pre><code class="lang-bash">❯ vault init -key-shares=2 -key-threshold=2 -pgp-keys=chief.key,hans.key
+</code></pre>
+			<pre><code class="lang-bash">Key 1: c1c14c03e96c6b2ad4cdb72b011000312d3ba8f34f0df9eaca0a36ad60fe3f5cbc24f88d17b7208b9526b48e67726e708101651d03016fc55f2c57dba535674298c82e786f72ab97398abc3cceeef96117bcd4d7656d97b0ac934d01ff7788b46a6185a03f3d1057368687e1af4e51d48a7778b3d59c45309e069ee8e2bdec91c693cadef1e5ddc6f7e9819d9d2afb0bc028df7f262975d761dc848c716c932c687d9fec98586ca07beb9ad68efedc5bbe5411ac45408ae6d17fc446e844d34f61f0a92bda0c933b3814440f80a55d27caef3a02958c77918c369c87ecc253d4e30f1c61b085ff69fda195549a07a1c4a44a0b49ebd254f513d1c3d6f380eacfdd4c0694ef5046d372b3ad97b0944045fe41bdb519212f64ca799e2e65d9024b2544937a33ce016f45f9f3921b251a98be27641bf6b6171389c8c4ae25ac74c0b79d342c0467dd103af682f2f6bae98e79f5116670c068b470191b97f637589fcedf9a0ca9302c3149a974519b450f6328ef8393af3063d0d93ad27eb829b43796179c3f66669ba5bed11ed85474635b83cc6b417cfaa28a36b06564a9f5e4778c9fc6a58d74822485185fcd145cfcba5d6fc79383b412d0fcecd1d62d238220995f7fda6f0fc92f4536d603490dc9368efec701f7c9969c5e660060a04c5746e404ee55c6c7fc4f71310caa51b604d2e72a21a434d0e15f0d0ac160e4aaa44aa84c5638b4e94622eb928cea542101d2e001e479b8751f5923ec8bebaf4b0968d9bc6de16f7de06ae036e10730e0a4e2f6a058c9f047e6478c54696320bd61516895eff2a260ac568df94df8855d61fe19ee29ff2fb6164540c31592e4685ae292e42da8032f4850d2c9f8136fbe051cb25244cf3b7398e0f5e123efe048e4b62662058ff76e84f4e8e5c7c627900de2f451e3cfe138d700
+Key 2: c1c14c0315f6026fb842b3eb0110002d18e4b211e7d5f17c8626d504d5d35ffc2ec96ae299003b5bccfad0aa76ae32bd55a5efc982968c938e4c5cc95c2e97afd80a9241d1b03d47bbf0798f6e630045b0281abd0e1b7881c87a156b0829c4fd467b4f0b41d7b79d2c433c162af0d3c9926a98d40a3d1db332f2f610c3a98e48f28991fe7a99c32f16a9a368b4e87a1c089a6fd136dfdde2c06e68052d730991fcecc02e0642f243e1369c29444bacac88290a96a7335ef0b75d75bac912accb9261424ef18db1b67bd7682a38c3a507d467d04de040d51ad04010bbc42ff704b6188881249d1eb7b86df412591ebe9fa35b46332b38a659a954f22798f6ca8d73266490d90451d446a58404f1479d709c0cb562bbb958bc81f96f757350b1611b019fd26323820490a3a577440d2da78b8b7bd4e4983ec89b2cb8d6dcd75051aa31b5567d743ddd9db3b91d865d36d145a7feba4bbb8261eec8e94095f73089aec25c865ceeb6fd17a85e3612a517d4f06fd62c8c298a85ad01b0a2ade55b80429661c3ac0ac545c96d2cc38e5032f53b6baa7e34a76a8ffecbd8613fbd5f7e6cedca0584ddc8939b2d913e5ce95376edfb1b31fa6593038c90f52c30df5ec2bd97dcf707a9d7aedaedfe8df4cb6ecac68bc3ae8e937fa3781046ffc39551afa3a63f08f6b06ef1d4109f8c2cb2a39d0d8c90f90454098450f9fca72ef820ad0b574ceba9586ec4e741e876b57be0d2e001e4f6236e02f45136761cf9f78d65fd2304e17efde024e0b5e13ecfe068e222fb207ae05ae61ec0e5d13bf49b8ea23b94277a79d65a6187cc344ac5337aa7018c0bd08aefca78f12c613b5d0f76bc33e7481d664216432a3888b4ce7729e910f2289ae25136e056e15b0fe01ee45eb94c7ddca0fe21dc79a4d34ae070a2e2fc189eb1e1bba200
+Initial Root Token: f0243ed0-b88f-32b3-a28a-0b5cbf0ac1f2
+
+Vault initialized with 2 keys and a key threshold of 2. Please
+securely distribute the above keys. When the Vault is re-sealed,
+restarted, or stopped, you must provide at least 2 of these keys
+to unseal it again.
+
+Vault does not store the master key. Without at least 2 keys,
+your Vault will remain permanently sealed.
+</code></pre>
+			<p>Vault returns two keys, each corresponding to the public keys we supplied the initialization with. To use those keys, you must decrypt them with the private key.
+				Let&#39;s decrypt the second one which corresponds to Hans Gruber&#39;s public key:</p>
+			<pre><code class="lang-bash">❯ echo c1c14c0...bba200 | xxd -r -p | gpg -d
+</code></pre>
+			<p>This will prompt you to enter your password for Hans&#39; private key.</p>
+			<pre><code class="lang-bash">You need a passphrase to unlock the secret key for
+user: &quot;Hans Gruber &lt;hans@nakatomi.com&gt;&quot;
+4096-bit RSA key, ID B842B3EB, created 2016-01-23 (main key ID B4C0CE0E)
+
+gpg: encrypted with 4096-bit RSA key, ID B842B3EB, created 2016-01-23
+      &quot;Hans Gruber &lt;hans@nakatomi.com&gt;&quot;
+b652edc8ce7e2f8e85f501356fb3fc7649364395ac69a7136b38fb041621afb302
+</code></pre>
+			<p>The bottom line is our new private vault key! I repeated the process to obtain my own private vault key. Now that we have two keys, we can unseal the vault and
+				start saving some secrets.</p>
+			<h2 id="unseal">Unseal</h2>
+			<p>Since we set our vault up to require two key-shares to unseal the vault, we&#39;ll need both my key and Hans&#39; key to unseal the vault. </p>
+			<pre><code class="lang-bash">❯ vault unseal b652edc8ce7e2f8e85f501356fb3fc7649364395ac69a7136b38fb041621afb302
+Sealed: true
+Key Shares: 2
+Key Threshold: 2
+Unseal Progress: 1
+</code></pre>
+			<p>Our <code>Unseal Progress</code> is at one, which means we need one more key, which is mine.</p>
+			<pre><code class="lang-bash">❯ vault unseal bd3a90b4c04c86cd0915d2d2jj32kl2493f2788bc2f39e83223a1887382223ef901
+Sealed: false
+Key Shares: 2
+Key Threshold: 2
+Unseal Progress: 0
+</code></pre>
+			<p>Success! Our vault has been unsealed. Obviously in a real scenario you wouldn&#39;t distribute the decrypted unseal keys, but rather give the encrypted base64
+				text to each user who provided you a public PGP key. </p>
+			<h2 id="save-read-a-secret">Save / Read A Secret</h2>
+			<p>Make sure to use the above provided initial root token to set the <code>VAULT_TOKEN</code> environment variable, otherwise your request will not work.</p>
+			<pre><code class="lang-bash">❯ export VAULT_TOKEN=f1243fd0-b38f-32b3-a28a-0e5cbf0ac1f2
+❯ vault write secret/password password=yippie-ki-yay
+Success! Data written to: secret/password
+❯ vault read secret/password
+Key               Value
+lease_duration    2592000
+password          yippie-ki-yay
+</code></pre>
+			<h2 id="conclusion">Conclusion</h2>
+			<p>Hashicorp&#39;s Vault is an amazing tool, and this is just one small feature that you could potentially use to create shared secrets with your team.</p>
+
+			<div class="divider"></div>
+			<ul class="rrssb-buttons">
+				<li class="rrssb-hackernews">
+					<a href="">
+						<span class="rrssb-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+					<path fill="#FFF" d="M14 13.626l-4.508-9.19H6.588l6.165 12.208v6.92h2.51v-6.92l6.15-12.21H18.69" />
+				</svg>
+			</span>
+						<span class="rrssb-text">hackernews</span>
+					</a>
+				</li>
+				<li class="rrssb-linkedin">
+					<!-- Replace href with your meta and URL information -->
+					<a href="" class="popup">
+						<span class="rrssb-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><path d="M25.424 15.887v8.447h-4.896v-7.882c0-1.98-.71-3.33-2.48-3.33-1.354 0-2.158.91-2.514 1.802-.13.315-.162.753-.162 1.194v8.216h-4.9s.067-13.35 0-14.73h4.9v2.087c-.01.017-.023.033-.033.05h.032v-.05c.65-1.002 1.812-2.435 4.414-2.435 3.222 0 5.638 2.106 5.638 6.632zM5.348 2.5c-1.676 0-2.772 1.093-2.772 2.54 0 1.42 1.066 2.538 2.717 2.546h.032c1.71 0 2.77-1.132 2.77-2.546C8.056 3.593 7.02 2.5 5.344 2.5h.005zm-2.48 21.834h4.896V9.604H2.867v14.73z"/></svg></span>
+						<span class="rrssb-text">linkedin</span>
+					</a>
+				</li>
+				<li class="rrssb-twitter">
+					<!-- Replace href with your Meta and URL information  -->
+					<a href="" class="popup">
+						<span class="rrssb-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+					<path d="M24.253 8.756C24.69 17.08 18.297 24.182 9.97 24.62c-3.122.162-6.22-.646-8.86-2.32 2.702.18 5.375-.648 7.507-2.32-2.072-.248-3.818-1.662-4.49-3.64.802.13 1.62.077 2.4-.154-2.482-.466-4.312-2.586-4.412-5.11.688.276 1.426.408 2.168.387-2.135-1.65-2.73-4.62-1.394-6.965C5.574 7.816 9.54 9.84 13.802 10.07c-.842-2.738.694-5.64 3.434-6.48 2.018-.624 4.212.043 5.546 1.682 1.186-.213 2.318-.662 3.33-1.317-.386 1.256-1.248 2.312-2.4 2.942 1.048-.106 2.07-.394 3.02-.85-.458 1.182-1.343 2.15-2.48 2.71z"
+					/>
+				</svg>
+			</span>
+						<span class="rrssb-text">twitter</span>
+					</a>
+				</li>
+				<li class="rrssb-reddit">
+					<a href="">
+						<span class="rrssb-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+					<path d="M11.794 15.316c0-1.03-.835-1.895-1.866-1.895-1.03 0-1.893.866-1.893 1.896s.863 1.9 1.9 1.9c1.023-.016 1.865-.916 1.865-1.9zM18.1 13.422c-1.03 0-1.895.864-1.895 1.895 0 1 .9 1.9 1.9 1.865 1.03 0 1.87-.836 1.87-1.865-.006-1.017-.875-1.917-1.875-1.895zM17.527 19.79c-.678.68-1.826 1.007-3.514 1.007h-.03c-1.686 0-2.834-.328-3.51-1.005-.264-.265-.693-.265-.958 0-.264.265-.264.7 0 1 .943.9 2.4 1.4 4.5 1.402.005 0 0 0 0 0 .005 0 0 0 0 0 2.066 0 3.527-.46 4.47-1.402.265-.264.265-.693.002-.958-.267-.334-.688-.334-.988-.043z"
+					/>
+					<path d="M27.707 13.267c0-1.785-1.453-3.237-3.236-3.237-.792 0-1.517.287-2.08.76-2.04-1.294-4.647-2.068-7.44-2.218l1.484-4.69 4.062.955c.07 1.4 1.3 2.6 2.7 2.555 1.488 0 2.695-1.208 2.695-2.695C25.88 3.2 24.7 2 23.2 2c-1.06 0-1.98.616-2.42 1.508l-4.633-1.09c-.344-.082-.693.117-.803.454l-1.793 5.7C10.55 8.6 7.7 9.4 5.6 10.75c-.594-.45-1.3-.75-2.1-.72-1.785 0-3.237 1.45-3.237 3.2 0 1.1.6 2.1 1.4 2.69-.04.27-.06.55-.06.83 0 2.3 1.3 4.4 3.7 5.9 2.298 1.5 5.3 2.3 8.6 2.325 3.227 0 6.27-.825 8.57-2.325 2.387-1.56 3.7-3.66 3.7-5.917 0-.26-.016-.514-.05-.768.965-.465 1.577-1.565 1.577-2.698zm-4.52-9.912c.74 0 1.3.6 1.3 1.3 0 .738-.6 1.34-1.34 1.34s-1.343-.602-1.343-1.34c.04-.655.596-1.255 1.396-1.3zM1.646 13.3c0-1.038.845-1.882 1.883-1.882.31 0 .6.1.9.21-1.05.867-1.813 1.86-2.26 2.9-.338-.328-.57-.728-.57-1.26zm20.126 8.27c-2.082 1.357-4.863 2.105-7.83 2.105-2.968 0-5.748-.748-7.83-2.105-1.99-1.3-3.087-3-3.087-4.782 0-1.784 1.097-3.484 3.088-4.784 2.08-1.358 4.86-2.106 7.828-2.106 2.967 0 5.7.7 7.8 2.106 1.99 1.3 3.1 3 3.1 4.784C24.86 18.6 23.8 20.3 21.8 21.57zm4.014-6.97c-.432-1.084-1.19-2.095-2.244-2.977.273-.156.59-.245.928-.245 1.036 0 1.9.8 1.9 1.9-.016.522-.27 1.022-.57 1.327z"
+					/>
+				</svg>
+			</span>
+						<span class="rrssb-text">reddit</span>
+					</a>
+				</li>
+				<li class="rrssb-googleplus">
+					<a href="" class="popup">
+						<span class="rrssb-icon">
+				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M21 8.29h-1.95v2.6h-2.6v1.82h2.6v2.6H21v-2.6h2.6v-1.885H21V8.29zM7.614 10.306v2.925h3.9c-.26 1.69-1.755 2.925-3.9 2.925-2.34 0-4.29-2.016-4.29-4.354s1.885-4.353 4.29-4.353c1.104 0 2.014.326 2.794 1.105l2.08-2.08c-1.3-1.17-2.924-1.883-4.874-1.883C3.65 4.586.4 7.835.4 11.8s3.25 7.212 7.214 7.212c4.224 0 6.953-2.988 6.953-7.082 0-.52-.065-1.104-.13-1.624H7.614z"/></svg>            </span>
+						<span class="rrssb-text">google+</span>
+					</a>
+				</li>
+				<li class="rrssb-email">
+					<a href="">
+						<span class="rrssb-icon"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><path d="M20.11 26.147c-2.335 1.05-4.36 1.4-7.124 1.4C6.524 27.548.84 22.916.84 15.284.84 7.343 6.602.45 15.4.45c6.854 0 11.8 4.7 11.8 11.252 0 5.684-3.193 9.265-7.398 9.3-1.83 0-3.153-.934-3.347-2.997h-.077c-1.208 1.986-2.96 2.997-5.023 2.997-2.532 0-4.36-1.868-4.36-5.062 0-4.75 3.503-9.07 9.11-9.07 1.713 0 3.7.4 4.6.972l-1.17 7.203c-.387 2.298-.115 3.3 1 3.4 1.674 0 3.774-2.102 3.774-6.58 0-5.06-3.27-8.994-9.304-8.994C9.05 2.87 3.83 7.545 3.83 14.97c0 6.5 4.2 10.2 10 10.202 1.987 0 4.09-.43 5.647-1.245l.634 2.22zM16.647 10.1c-.31-.078-.7-.155-1.207-.155-2.572 0-4.596 2.53-4.596 5.53 0 1.5.7 2.4 1.9 2.4 1.44 0 2.96-1.83 3.31-4.088l.592-3.72z"/></svg></span>
+						<span class="rrssb-text">email</span>
+					</a>
+				</li>
+			</ul>
+
+			<div id="disqus_thread"></div>
+			<script>
+				var disqus_config = function() {
+					this.page.url = 'https://chiefy.github.iousing-pgp-keys-with-hashicorp-s-vault';
+					this.page.identifier = 'Using-PGP-Keys-With-Hashicorps-Vault';
+				};
+				(function() { // DON'T EDIT BELOW THIS LINE
+					var d = document,
+						s = d.createElement('script');
+					s.src = '//chiefy.disqus.com/embed.js';
+					s.setAttribute('data-timestamp', +new Date());
+					(d.head || d.body).appendChild(s);
+				})();
+			</script>
+			<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+
+		</article>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+		<script>
+			hljs.initHighlightingOnLoad();
+		</script>
+		<script>
+			window.jQuery || document.write('<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"><\/script>')
+		</script>
+		<script src="/assets/js/rrssb.min.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$('.rrssb-buttons').rrssb({
+					title: 'Using PGP Keys With Hashicorp&#39;s Vault',
+					url: 'https://chiefy.github.io/using-pgp-keys-with-hashicorp-s-vault',
+					description: 'Using PGP Keys With Hashicorp&#39;s Vault via @tehsuck',
+					emailBody: '\nUsing PGP Keys With Hashicorp&#39;s Vault\nhttps://chiefy.github.io/using-pgp-keys-with-hashicorp-s-vault\n\nUnless you&#39;ve been living in a DevOps cave, you have probably heard of Hashicorp&#39;s Vault. By their own definition:'
+				});
+			});
+		</script>
+		<div class="back">
+			<a href="https://chiefy.github.io">back</a>
+		</div>
+
+	</main>
+</body>
+
+</html>
