@@ -1,7 +1,8 @@
 ---
 layout: post.swig
-title: Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform
-date: 2016-02-14 12:00:00
+title: Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform Part II
+date: 2016-02-16 12:00:00
+draft: true
 tags:
   - ecs
   - aws
@@ -55,7 +56,7 @@ $ git clone --recursive git@github.com:/chiefy/wercker-node-ecs-demo
 # Provisioning ECS Cluster
 As stated above, we will be creating real, live, money-costing AWS infrastructure. You will need a valid "PowerUser" keypair. Once again, unless you want to be charged hourly fees, you must destroy any resources you create with this tutorial. Fortunately [Terraform](https://www.terraform.io/) from [Hashicorp](https://www.hashicorp.com/) makes this all very, very easy.
 
-In order to deploy docker containers to AWS with Wercker, we are going to need to setup an AWS ECS cluster. The cloned project contains a submodule `terraform/ecs` which is a [fork of terraform-amazon-ecs](https://github.com/Capgemini/terraform-amazon-ecs). 
+In order to deploy docker containers to AWS with Wercker, we are going to need to setup an AWS ECS cluster. The cloned project contains a submodule `terraform/ecs` which is a [fork of terraform-amazon-ecs](https://github.com/Capgemini/terraform-amazon-ecs).
 
 If you don't already, make sure to setup an `awscli` profile with your credentials:
 
@@ -192,7 +193,7 @@ Plan: 10 to add, 0 to change, 0 to destroy.
 
 ```
 
-As you can see from the last line of output, Terraform is planning on creating 10 resources. Later if you need to modify any of your AWS infrastructure, you can change your templates, and once again plan and apply and Terraform will magically manage the changes for you. Next, apply the plan and actually create the infrastructure. You should only have to perform this once unless you plan on creating an ECS cluster per-environment (dev/stage/prod). 
+As you can see from the last line of output, Terraform is planning on creating 10 resources. Later if you need to modify any of your AWS infrastructure, you can change your templates, and once again plan and apply and Terraform will magically manage the changes for you. Next, apply the plan and actually create the infrastructure. You should only have to perform this once unless you plan on creating an ECS cluster per-environment (dev/stage/prod).
 
 ```
 $ terrform apply
@@ -212,7 +213,7 @@ State path: terraform.tfstate
 
 You can open up AWS console UI and verify that your ECS cluster has been created:
 
-## Developing Locally w/ `wercker`
+## The *Dev* Pipeline
 Our sample app here is a microservice written in node utilizing the great Seneca framework. I am not going to go into a lot of detail of what a microservice is, but for this example it is a simple web service that looks up a movie by title which is stored in redis.
 
 ### Navigating `wercker.yml`
@@ -244,7 +245,7 @@ dev:
         reload: true
 
 ```
-The first thing to note here is that we have defined the `dev` *pipeline*, which, just as it sounds is to setup our service to run locally for development. Each *pipeline* can have multiple *services* and *steps* to get it up and running. For our example, we are using redis as the data store. Much like `docker-compose`, we simply tell wercker the name of the docker image we want the service to use, and it will run it. 
+The first thing to note here is that we have defined the `dev` *pipeline*, which, just as it sounds is to setup our service to run locally for development. Each *pipeline* can have multiple *services* and *steps* to get it up and running. For our example, we are using redis as the data store. Much like `docker-compose`, we simply tell wercker the name of the docker image we want the service to use, and it will run it.
 
 ### Boxes
 Each wercker *pipeline* can use a specific docker image to run inside of, or it can use a globally defined *box*. For our example we are going to use a global *box* definition. `chiefy/alpine-nodejs` is just Alpine Linux with statically compiled `node` binary (`npm` included). This will be important in a later step. Because by default, Alpine does not ship with `bash`, you can see we have overriden the default `cmd`. With any `bash` enabled image, this would not be needed.
@@ -257,7 +258,7 @@ Unlike `docker-compose`, wercker does not have the concept of linking containers
 <container name>_PORT_<port>_<protocol>_PORT
 <container name>_PORT_<port>_<protocol>_PROTO
 
-// any other env vars exposed from within the container 
+// any other env vars exposed from within the container
 // will be exposed in this format
 <name>_ENV_<env>
 ```

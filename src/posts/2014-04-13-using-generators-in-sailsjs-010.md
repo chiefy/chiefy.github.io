@@ -3,8 +3,8 @@ layout: post.swig
 title: Using generators in SailsJS 0.10.x
 date: 2014-04-13 16:59:27
 tags:
-  - sails,
-  - generators,
+  - sails
+  - generators
   - javascript
 ---
 
@@ -45,7 +45,7 @@ We are using a custom generator for the keyword 'model', so in our `.sailsrc` JS
 {
   "generators": {
     "modules": {
-    	"model" : "sails-generate-model"
+      "model" : "sails-generate-model"
     }
   }
 }

@@ -2,6 +2,7 @@
 layout: post.swig
 title: Avoid Using Gelf Docker Log Driver with AWS VPCs
 date: 2016-01-30 12:00:00
+draft: true
 tags:
   - logging
   - logs

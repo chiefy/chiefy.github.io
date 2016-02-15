@@ -15,6 +15,7 @@ var excerpts     = require('metalsmith-excerpts')();
 var beautify     = require('metalsmith-beautify')();
 var uglify       = require('metalsmith-uglify')();
 var markdown     = require('metalsmith-markdown')();
+var drafts       = require('metalsmith-drafts')();
 /*eslint-enable*/
 
 var pkg = JSON.parse(fs.readFileSync('package.json'));
@@ -45,12 +46,13 @@ var permalinks = _permalinks({
 });
 var gist = _gist({
 	debug: true,
-	caching: true,
+	caching: false,
 	cacheDir: '.gists'
 });
 
 ms
 	.use(define)
+	.use(drafts)
 	.use(collections)
 	.use(sass)
 	.use(assets)
