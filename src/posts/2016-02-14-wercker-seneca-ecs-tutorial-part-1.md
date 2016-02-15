@@ -1,6 +1,6 @@
 ---
 layout: post.swig
-title: Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform: Part I
+title: "Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform: Part I"
 date: 2016-02-14 12:00:00
 tags:
   - ecs
