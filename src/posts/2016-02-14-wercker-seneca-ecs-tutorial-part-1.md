@@ -46,7 +46,7 @@ $ brew update && brew install docker docker-machine terraform wercker-cli awscli
 ```
 
 ## Check Out Project
-To get started, you will need to clone the demo project:
+To get started, you will need to clone the [demo project](https://github.com/chiefy/wercker-node-ecs-demo):
 
 ```
 $ git clone --recursive git@github.com:/chiefy/wercker-node-ecs-demo
