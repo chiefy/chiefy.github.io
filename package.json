@@ -13,7 +13,8 @@
   "scripts": {
     "build": "node index.js",
     "serve": "http-server ./build",
-    "dev": "NODE_ENV=dev npm run build && npm run serve"
+    "dev": "npm run build-dev && npm run serve",
+    "build-dev": "NODE_ENV=dev npm run build"
   },
   "repository": {
     "type": "git",
