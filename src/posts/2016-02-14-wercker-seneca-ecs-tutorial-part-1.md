@@ -53,7 +53,7 @@ $ git clone --recursive git@github.com:/chiefy/wercker-node-ecs-demo
 ```
 
 # Pipelines, Steps and Boxes
-Wercker's YAML definition allows you to specify various *steps* such as `npm-install` or `script` inside pre-defined *pipelines* (**dev**, **build** and **deploy**). When you push a code change to a linked repository, wercker will automagically run your `build` *pipeline* inside a specified *box* and upon success, deploy using the *deploy* pipeline (this needs to be explicity setup on the wercker website). A *box* is simply a docker image where wercker runs a *pipeline*. *Boxes* can be defined on a per-pipeline or global basis, but there **must** be a *box* definition for each pipeline (or a global), otherwise wercker will have problems and die.
+Wercker's YAML definition allows you to specify various *steps* such as `npm-install` or `script` inside pre-defined *pipelines* (**dev**, **build** and **deploy**). When you push a code change to a linked repository, Wercker will automagically run your `build` *pipeline* inside a specified *box* and upon success, deploy using the *deploy* pipeline (this needs to be explicity setup on the Wercker website). A *box* is simply a docker image where Wercker runs a *pipeline*. *Boxes* can be defined on a per-pipeline or global basis, but there **must** be a *box* definition for each pipeline (or a global), otherwise Wercker will have problems and die.
 
 ## The *Dev* Pipeline
 Our sample app here is a microservice written in node utilizing the great Seneca framework. I am not going to go into a lot of detail of what a microservice is, but for this example it is a simple web service that looks up a movie by title which is stored in redis.
@@ -87,13 +87,13 @@ dev:
       reload: true
 ```
 
-The first thing to note here is that we have defined the `dev` *pipeline*, which, just as it sounds is to setup our service to run locally for development. Each *pipeline* can have multiple *services* and *steps* to get it up and running. For our example, we are using redis as the data store. Much like `docker-compose`, we simply tell wercker the name of the docker image we want the service to use, and it will run it.
+The first thing to note here is that we have defined the *dev* pipeline, which, just as it sounds is to setup our service to run locally for development. Each *pipeline* can have multiple *services* and *steps* to get it up and running. For our example, we are using Redis as the data store. Much like `docker-compose`, we simply tell Wercker the name of the docker image we want the service to use, and it will run it.
 
 ### Boxes
-Each wercker *pipeline* can use a specific docker image to run inside of, or it can use a globally defined *box*. For our example we are going to use a global *box* definition. [`chiefy/alpine-nodejs`](https://quay.io/repository/chiefy/alpine-nodejs) is just [Alpine Linux](http://alpinelinux.org/) with statically compiled `node` binary (`npm` included). This will be important in a later step. Because by default Alpine does not ship with `bash`, we override the default `cmd`. With any `bash` enabled image, this would not be needed.
+Each Wercker *pipeline* can use a specific docker image to run inside of, or it can use a globally defined *box*. For our example we are going to use a global *box* definition. [`chiefy/alpine-nodejs`](https://quay.io/repository/chiefy/alpine-nodejs) is just [Alpine Linux](http://alpinelinux.org/) with statically compiled `node` binary (`npm` included). This will be important in a later step. Because by default Alpine does not ship with `bash`, we override the default `cmd`. With any `bash` enabled image, this would not be needed.
 
 ### Linking Services
-Unlike `docker-compose`, wercker does not have the concept of linking containers using their `/etc/hosts`. Wercker exposes various environment variables that you can instead use to link services between running containers. The environment variables are set in the following format:
+Unlike `docker-compose`, Wercker does not have the concept of linking containers using their `/etc/hosts`. Wercker exposes various environment variables that you can instead use to link services between running containers. The environment variables are set in the following format:
 
 ```
 <container name>_PORT_<port>_<protocol>_ADDR
@@ -133,4 +133,4 @@ $ curl -XGET http://192.168.99.100:3000/Blue%20Velvet
 The service simply looks up a movie by title and outputs the Seneca entity JSON. If you change a file, Wercker's `internal/watch` step will automagically reload the application on file change, which is handy when developing locally.
 
 # What's Next?
-In the next part of this tutorial, we will cover Wercker's `build` *pipeline*.
+In the [next part of this tutorial](/easily-deploy-a-seneca-microservice-to-ecs-with-wercker-and-terraform-part-ii/), we will cover Wercker's *build* and *deploy* pipelines.
