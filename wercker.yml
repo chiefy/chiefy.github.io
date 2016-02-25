@@ -9,7 +9,8 @@ build:
 
 deploy:
   gh-pages:
-    - leipert/git-push@0.7.6:
-       gh_oauth: $GIT_TOKEN
+    - pheres/git-push@0.4.10:
+       gh_token: $GIT_TOKEN
        clean_removed_files: true
        basedir: build
+       branch: master
