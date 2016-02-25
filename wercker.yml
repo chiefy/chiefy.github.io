@@ -9,6 +9,7 @@ build:
 
 deploy:
   gh-pages:
-    - lukevivier/gh-pages@0.2.1:
-        token: $GIT_TOKEN
-        basedir: build
+    - leipert/git-push@0.7.6:
+       gh_oauth: $GIT_TOKEN
+       clean_removed_files: true
+       basedir: build
