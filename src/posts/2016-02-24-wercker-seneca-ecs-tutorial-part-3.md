@@ -1,6 +1,6 @@
 ---
 layout: post.swig
-title: Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform Part II
+title: Easily Deploy A Seneca Microservice to ECS with Wercker and Terraform Part III
 date: 2016-02-16 12:00:00
 draft: true
 tags:
@@ -16,15 +16,16 @@ tags:
 ---
 Among the many players in the continious integration SaaS providers, I recently discovered Wercker:
 
-| Build apps faster. Release often. Automate all the things.
+> Build apps faster. Release often. Automate all the things.
 
-The following is the second of a two-part tutorial on how to use Wercker along with Hashicorp's Terraform and AWS Elastic Container Service (ECS) to easily deploy minimal docker services. If you haven't, please start with [the first installment]() and then continue here.
+The following is the third of a three-part tutorial on how to use Wercker along with Hashicorp's Terraform and AWS Elastic Container Service (ECS) to easily deploy minimal docker services. If you haven't, please start with [the first installment](/easily-deploy-a-seneca-microservice-to-ecs-with-wercker-and-terraform-part-i/) and then continue here.
 
+This is the final step in our deployment chain. In the previous parts of this tutorial, we have learened how to use Wercker's `yaml` configuration to orchestrate a local development environment, create a build artifact with the *build* pipeline and push our artifact as a docker image to DockerHub.
 
 # Creating an ECS Cluster With Terraform
 As previously stated, we will be creating real, live, money-costing AWS infrastructure. You will need a valid AWS keypair which has "PowerUser" rights. Once again, unless you want to be charged hourly fees, you must destroy any resources you create with this tutorial. Fortunately [Terraform](https://www.terraform.io/) from [Hashicorp](https://www.hashicorp.com/) makes this all very, very easy.
 
-In order to deploy docker containers to AWS with Wercker, we eed to standup and provision an AWS ECS cluster. The cloned project contains a submodule `terraform/ecs` which is a [fork of terraform-amazon-ecs](https://github.com/Capgemini/terraform-amazon-ecs).
+In order to deploy docker containers to AWS with Wercker, we need to stand up and provision an AWS ECS cluster. The cloned project contains a submodule `terraform/ecs` which is a [fork of terraform-amazon-ecs](https://github.com/Capgemini/terraform-amazon-ecs).
 
 If you don't already, make sure to setup an `awscli` profile with your credentials:
 
@@ -36,7 +37,7 @@ Default region name [None]: us-east-1
 Default output format [None]: json
 ```
 
-Open and edit `terraform/ecs/terraform.tfvars` this file is a simple key-value store for setting terraform variables. You will need to provide a public key, you should have the private key for SSH access to any EC2 resources created. You will also provide your dockerhub credentials in order for ECS to pull private docker images.
+Open and edit `terraform/ecs/terraform.tfvars` this file is a simple key-value file for setting terraform variables. You will need to provide a public key, you should have the private key for SSH access to any EC2 resources created. You will also provide your DockerHub credentials in order for ECS to pull private docker images.
 
 ```
 # The AWS region you are deploying to
@@ -184,10 +185,10 @@ Note: You didn't specify an "-out" parameter to save this plan, so when
 Plan: 10 to add, 0 to change, 0 to destroy.
 ```
 
-As you can see from the last line of output, Terraform is planning on creating 10 resources. Later if you need to modify any of your AWS infrastructure, you can change your templates, and once again `plan` and `apply` and Terraform will magically manage the changes for you. Next, apply the plan and actually create the infrastructure. You should only have to perform this once unless you plan on creating an ECS cluster per-environment (dev/stage/prod).
+As you can see from the last line of output, Terraform is planning on creating 10 resources. Later if you need to modify any of your AWS infrastructure, you can change your templates, and once again `npm run ecs-plan` and `npm run ecs-apply` and Terraform will magically manage the changes for you. Next, apply the plan and actually create the infrastructure. You should only have to perform this once unless you plan on creating an ECS cluster per-environment (dev/stage/prod).
 
 ```
-$ terrform apply
+$ npm run apply-ecs
 ...
 this will take 5-10 minutes
 ...
@@ -202,83 +203,68 @@ use the `terraform show` command.
 State path: ../../ecs.tfstate
 ```
 
-You can open up AWS console UI and verify that your ECS cluster has been created:
-
-[!
-
-# The *Build* Pipeline
-In the first part of this tutorial, we learned about Wercker's *dev* pipeline and how to use it to orchestrate a development environment locally. When you are done coding and testing and want to push some new feature or bug-fix, the *build* pipeline controls your build on [wercker.com](https://wercker.com).
-
-To get started, create an account at [wercker.com](https://wercker.com), next [create a new *application* by linking GitHub to our Wercker account](https://app.wercker.com/#applications/create). The Wercker quickstart for nodejs has a good walkthrough on how to setup and link your GitHub project.
-  
-  * [Wercker quickstart for nodejs](http://devcenter.wercker.com/quickstarts/building/javascript.html#adding-your-app-to-wercker)
-
-> Build pipelines have an end result called an artifact which is the result of your pipeline. Wercker stores this artifact on its infrastructure such that it can be used in deploy pipelines. The artifact is stored both as a container and a tarball of just the source files.
-
-Here's our *build* pipeline definition in `wercker.yml`:
+You can check the status of your cluster using the `aws` cli:
 
 ```
-...
-build:
-  steps:
-    - script:
-      name: set env vars
-      code: export NODE_ENV=test
-
-    - npm-install
-
-    - npm-test
-
-    - script:
-        name: copy files
-        code: |
-          cp $(which node) "$WERCKER_OUTPUT_DIR"
-          cp -RL node_modules config data api index.js package.json "$WERCKER_OUTPUT_DIR"
-...
+❯ aws ecs describe-clusters --clusters wercker-demo --profile personal
+{
+    "clusters": [
+        {
+            "status": "ACTIVE",
+            "clusterName": "wercker-demo",
+            "registeredContainerInstancesCount": 2,
+            "pendingTasksCount": 0,
+            "runningTasksCount": 0,
+            "activeServicesCount": 0,
+            "clusterArn": "arn:aws:ecs:us-east-1:1234456789:cluster/wercker-demo"
+        }
+    ],
+    "failures": []
+}
 ```
 
-Since `node_modules` is not commited to the repo, we'll use the `npm-install` step, and then run our tests with the `npm-test` step. That way we can hook up notifications to blame the poor sap who broke the build.
+There are two `registeredContainerInstancesCount` which is what was specified with our Terraform script, and the cluster is `ACTIVE` so everything looks good!
 
-If the tests pass, we just need to copy any files needed for the build artifact. In this case, since I've statically compiled node, the node binary is copied to `$WERCKER_OUTPUT_DIR` and then any files we need to run the microservice, such as: `node_modules`, `config`, etc. Let's push our new code (with a few tests) and see if the build process works.
+# Adding the ECS Deploy Target
 
-![yay!, our build passed](/public/img/wercker-ecs-demo-3.png)
+Up until now, there has only been one deploy target, the `dockerhub` target which pushes the build artifact as a docker image to DockerHub and tags it with the commit hash. Now that the ECS cluster is ready for services, we can use a custom Wercker step in the *deploy* pipeline to run Terraform which will build out and deploy ECS services and tasks relating to the simple Seneca microservice we've created.
 
-Yay! Our build ran and passed. If you had issues, you could inspect each step that Wercker takes though the web UI, or you can run build locally to debug.
+## Add A New Deploy Target
 
-# The *Deploy* Pipeline
-Now that the *build* pipeline is succesful, there's a healthy artifact out there, just waiting to be lovingly deployed, somewhere... Our goal is to deploy to the ECS cluster we stood up above, but the first part of our deploy chain is pushing our artifact to DockerHub as a tagged docker image.
+On the Wercker website, in the `wercker-node-ecs-demo` application settings, we'll need to add a new deploy target. The new target is simply called `ecs`, and it's important that we inject certain environment vars to the deploy. Use the settings cog to go into the application's settings, and then create a new deploy target. Next, "Add new variable" and enter the following: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` will be used by Terraform's AWS provisioner. These credentials must have `"ecs:*"`, `s3:*` and `ec2:elb:*` rights in order to create the AWS infrastructure required. `AWS_ACCOUNT_ID` will be injected into a templated `.tfvars` file which contains the ARNs for the IAM role and ECS cluster ID which were created in the above step. 
 
-Here's our new section of `wercker.yml`:
+`terraform/terraform.tfvars.tmpl`:
 
 ```
-...
-deploy:
-  dockerhub:
-    - internal/docker-scratch-push:
-        username: $DOCKER_USERNAME
-        password: $DOCKER_PASSWORD
-        cmd: ./node ./index.js
-        tag: $WERCKER_GIT_COMMIT
-        ports: "3000"
-        repository: chiefy/wercker-ecs-demo
-        registry: https://registry.hub.docker.com
-...
+iam_role_arn="arn:aws:iam::${AWS_ACCOUNT_ID}:role/ecs_role"
+ecs_cluster_id="arn:aws:ecs:us-east-1:${AWS_ACCOUNT_ID}:cluster/wercker-demo"
 ```
 
-For each deploy, you need to provide a name that distinguishes it so you can later reference it on the website. Our first *deploy* will be pushing a docker image to DockerHub, so `dockerhub` it is! As with all the other Wercker pipelines, you use steps to run the deploy. Here the `internal/docker-scratch-push` step is used. This is a handy step that simply uses whatever you copied into your `$WERCKER_OUTPUT_DIR` and places it inside a `FROM SCRATCH` docker image. The main benefits of slim docker images are: fast pulls and decreased attack vectors. If you are using Go, this is a great option as well.
+## The Terraform Templates
 
-## Injecting Secrets Into Your Deploy
+In order to deploy our service to ECS, we need a few simple Terraform templates along with some JSON to define the tasks. 
 
-Of note are the two environment vars `$DOCKER_USERNAME` and `$DOCKER_PASSWORD`. These get injected by Wercker at deploy time. You manage these secrets in the web UI by clicking on the settings cog inside your application and then "Environment variables."
+```
+resource "aws_ecs_service" "movie_api" {
+	name = "${concat("movie_api-",var.env)}"
+	cluster = "${var.ecs_cluster_id}"
+	task_definition = "${aws_ecs_task_definition.movie_api.arn}"
+	desired_count = 2
+	iam_role = "${var.iam_role_arn}"
 
-![set your env vars on the site](/public/img/wercker-ecs-demo-4.png)
+	load_balancer {
+		elb_name = "${aws_elb.movie_api_elb.id}"
+		container_name = "movie-api"
+		container_port = 3000
+	}
+}
 
-Let's push the new *deploy* pipeline to create a new build.
+resource "aws_ecs_task_definition" "movie_api" {
+    family = "${concat("movie-api-",var.env)}"
+    container_definitions = "${file("movie-api-task.json")}"
+}
 
-## Adding a Deploy Target
-Unfortunately, Wercker can't currently detect your *deploy* pipeline settings, so you must register it by using the web UI: click the cog icon in the upper right of your application's page. Go to "Targets," and add a new "custom deploy" target with `dockerhub` as the name and check "auto-deploy" and make sure to enter "master" on the whitelist below.
+```
+In ECS-land, a `service` consists of a `task-definition` which is a JSON-representation of orchestrated containers. ECS allows you to attach an ELB to a `service` along with specifying the number of task instances to spawn (this includes any containers in the task definition).
 
-![add deploy target](/public/img/wercker-ecs-demo-5.png)
-
-## Push To DockerHub
-To test our newly added deploy target, go to the latest successful build and click the "Deploy to" dropdown and select "dockerhub."
+There are two Terraform outputs from the ECS cluster definition that we must reference here: `${var.ecs_cluster_id}`, which is just the full ARN of the `wercker-demo` ECS cluster which was created in the previous step, and `${var.iam_role_arn}`, which is the IAM role also created in the previous step. In order to get these variables into our templates, there is a `
