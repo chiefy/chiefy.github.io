@@ -59,7 +59,7 @@
 				a volume container that will mount the code, then in another container re-install or re-build <code>node_modules</code> dependencies and run the application.</p>
 			<h1 id="use-a-code-only-docker-image">Use a Code-only Docker Image</h1>
 			<p>Make sure you create a <code>.dockerignore</code> so that the docker context doesn&#39;t pick up large directories like <code>node_modules</code> or <code>.git</code>.
-				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist/embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
+				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist-embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
 				<div id="gist30064143" class="gist">
 					<div class="gist-file">
 						<div class="gist-data">
@@ -88,7 +88,7 @@
 			</p>
 			<p>Next, all you need are your source files and any assets. Since we&#39;re just using this as a data volume, we&#39;ll use <code>tinan/true</code> to immediately
 				exit but keep the data volume exposed to other containers who want to mount it.
-				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist/embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
+				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist-embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
 				<div id="gist30064143" class="gist">
 					<div class="gist-file">
 						<div class="gist-data">
@@ -118,7 +118,7 @@
 				</div>
 			</p>
 			<p>For this example we&#39;ll create a super simple <code>expressjs</code> app that prints out the nodejs version:
-				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist/embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
+				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist-embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
 				<div id="gist30064143" class="gist">
 					<div class="gist-file">
 						<div class="gist-data">
@@ -191,7 +191,7 @@
 					<code>npm install</code></li>
 			</ul>
 			<p>
-				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist/embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
+				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist-embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
 				<div id="gist30064143" class="gist">
 					<div class="gist-file">
 						<div class="gist-data">
@@ -336,7 +336,7 @@ I am running nodejs version: 4.2.2
 			<p>To upgrade the nodejs version, all we need to do is create a new docker image with the patched node binary, update the <code>docker-compose.yml</code> accordingly
 				and issue <code>docker-compose up</code> which should detect the changes and restart the <code>app</code> service. Note the new nodejs version <code>4.2.3</code>				below:</p>
 			<p>
-				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist/embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
+				<link rel="stylesheet" href="https://assets-cdn.github.com/assets/gist-embed-7346e9a735aaeeacede51d1efaad6208f95d9edbc222155878bfddc2da28fa87.css">
 				<div id="gist30064143" class="gist">
 					<div class="gist-file">
 						<div class="gist-data">
